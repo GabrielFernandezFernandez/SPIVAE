@@ -4,6 +4,6 @@ project:
 website:
   title: "SPIVAE"
   site-url: "https://GabrielFernandezFernandez.github.io/SPIVAE"
-  description: "Stochastic processes insights from VAE. Code for the paper "Learning minimal representations of stochastic processes with variational autoencoders"."
+  description: "Stochastic processes insights from VAE. Code for the paper: Learning minimal representations of stochastic processes with variational autoencoders."
   repo-branch: main
   repo-url: "https://github.com/GabrielFernandezFernandez/SPIVAE"
