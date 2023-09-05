@@ -1,9 +1,0 @@
-website:
-  sidebar:
-    contents:
-      - index.ipynb
-      - section: source_nbs
-        contents:
-          - source_nbs/00_data.ipynb
-          - source_nbs/01_models.ipynb
-          - source_nbs/02_utils.ipynb

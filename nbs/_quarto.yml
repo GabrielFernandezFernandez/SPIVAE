@@ -1,5 +1,6 @@
 project:
   type: website
+  output-dir: _docs
 
 format:
   html:
@@ -8,13 +9,40 @@ format:
     toc: true
 
 website:
+  title: "SPIVAE"
+  site-url: "https://GabrielFernandezFernandez.github.io/SPIVAE"
+  description: "Stochastic processes insights from VAE. Code for the paper: Learning minimal representations of stochastic processes with variational autoencoders."
+  repo-branch: main
+  repo-url: "https://github.com/GabrielFernandezFernandez/SPIVAE"
   twitter-card: true
   open-graph: true
   repo-actions: [issue]
   navbar:
     background: primary
     search: true
+    right:
+      - icon: github
+        href: "https://github.com/GabrielFernandezFernandez/SPIVAE"
   sidebar:
     style: floating
-
-metadata-files: [nbdev.yml, sidebar.yml]
+    contents:
+    - index.ipynb
+    - section: Documentation
+      contents:
+      - source/00_data.ipynb
+      - source/01_models.ipynb
+      - source/02_utils.ipynb
+    - section: Tutorials
+      contents:
+      - section: Fractional Brownian motion
+        contents:
+        - tutorials/0_training_FBM.ipynb
+        - tutorials/1_analysis_FBM.ipynb
+        - tutorials/2_generation_FBM.ipynb
+      - section: Scaled Brownian motion
+        contents:
+        - tutorials/0_training_SBM.ipynb
+        - tutorials/1_analysis_SBM.ipynb
+        - tutorials/2_generation_SBM.ipynb
+    
+# metadata-files: [nbdev.yml, sidebar.yml]
