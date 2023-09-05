@@ -1,6 +1,7 @@
 name: CI
 on:  [workflow_dispatch, pull_request, push]
-
+env:
+  HDF5_USE_FILE_LOCKING: False
 jobs:
   test:
     runs-on: ubuntu-latest
