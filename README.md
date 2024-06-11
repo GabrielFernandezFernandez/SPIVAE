@@ -8,8 +8,6 @@
 
 [![](https://zenodo.org/badge/667817128.svg)](https://zenodo.org/doi/10.5281/zenodo.11572993)
 
-DOI
-
 </div>
 
 SPIVAE is a machine learning method to study stochastic processes. It
