@@ -28,7 +28,7 @@ class Loss():
             log_likelihood = mix_gaussian_loss(y_hat, target, reduction=self.reduction)
         else:
             log_likelihood = mix_gaussian_loss(y_hat, target[:,self.RF:], reduction=self.reduction)
-            
+
         if self.reduction=='none':
             kl = kl_divergence(mu, logvar, reduction='none') if self.c else 0
             return log_likelihood, self.beta, kl

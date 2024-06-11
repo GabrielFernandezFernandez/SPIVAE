@@ -4,6 +4,14 @@
 
 ![Interpretable autoregressive β-VAE architecture.](fig1.png)
 
+<div>
+
+[![](https://zenodo.org/badge/667817128.svg)](https://zenodo.org/doi/10.5281/zenodo.11572993)
+
+DOI
+
+</div>
+
 SPIVAE is a machine learning method to study stochastic processes. It
 tries to learn the probability distribution of input trajectories and
 permits us to interpret its functioning and generate new trajectories
@@ -49,14 +57,4 @@ If you use this library, please give us credit.
                    Biological Physics (physics.bio-ph),
                    {Data Analysis, Statistics and Probability (physics.data-an)},
                    Quantitative Methods (q-bio.QM)}
-    }
-
-    @misc{fernandez2023spivae,
-      title = {{{SPIVAE}}},
-      author = {{Fern{\'a}ndez-Fern{\'a}ndez}, Gabriel},
-      year = {2023},
-      month = jul,
-      url = {https://github.com/GabrielFernandezFernandez/SPIVAE},
-      urldate = {2023-07-21},
-      copyright = {Apache-2.0}
     }
