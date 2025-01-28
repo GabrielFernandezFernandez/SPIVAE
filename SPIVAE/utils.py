@@ -127,6 +127,11 @@ def mix_gaussian_loss(y_hat, y, log_scale_min=-12.0, reduction='sum'):
 #             return -torch.sum(log_sum_exp(log_probs))
             return -torch.sum(torch.logsumexp(log_probs, channel_dim))
             # logsumexp in channel/mixtures dimension and then sum everything else
+    elif reduction == 'sumtime':
+        if nr_mix == 1:
+            return -torch.sum(log_probs.mean(0)) # sum in time mean in batch (B, T, num_mixtures) and return an scalar
+        else:
+            return -torch.sum(torch.logsumexp(log_probs, channel_dim).mean(0))
     else:
         if nr_mix == 1:
             return -log_probs
