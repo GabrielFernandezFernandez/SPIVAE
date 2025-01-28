@@ -180,17 +180,19 @@ class VAEConv1d(nn.Module):
 from torch.distributions import Normal
 
 # %% ../nbs/source/01_models.ipynb 21
+# modified from https://github.com/r9y9/wavenet_vocoder/blob/master/wavenet_vocoder/mixture.py#L221
 def sample_from_mix_gaussian(y, log_scale_min=-12.0):
     """
     Sample from (discretized) mixture of gaussian distributions
-    
+
     Parameters
     ----------
         y : Tensor
             Mixture of Gaussians parameters. Shape (B x C x T)
         log_scale_min : float
-            Log scale minimum value
-        
+            Log scale minimum value.
+            In many other implementations this variable is never used.
+
     Returns
     -------
         Tensor
@@ -232,6 +234,8 @@ def sample_from_mix_gaussian(y, log_scale_min=-12.0):
         else:
             assert False, f"shouldn't happen C={C}"
 
+    # bound log_scales to avoid -inf going to scale=0 and Normal raising an error
+    log_scales = torch.clamp(log_scales, min=log_scale_min)
     scales = torch.exp(log_scales)
     dist = Normal(loc=means, scale=scales)
     x = dist.sample()
