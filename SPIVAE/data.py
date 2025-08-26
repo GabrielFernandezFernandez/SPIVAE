@@ -32,7 +32,7 @@ def load_data(ds_args):
         ds = AD.create_dataset(T=ds_args["T"], N_models=ds_args["N"],
                                exponents=ds_args["alpha"], models=[2], 
                                N_save=ds_args["N_save"],
-                               t_save=ds_args["T_save"],
+                               T_save=ds_args["T_save"],
                                save_trajectories=False, load_trajectories=True,
                                path=ds_args["path"])  # trajs, T+2
         ds_labels = ds[:,1][:,None]  # trajs=N*n_alphas,1 # alpha
