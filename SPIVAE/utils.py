@@ -222,18 +222,19 @@ class ShowLossCallback(Callback):
                     # max((max(Tensor(rec.losses)), max(Tensor(val_losses)))))
         self.progress.mbar.update_graph([(iters, rec.losses), (self.nb_batches, val_losses)], x_bounds, y_bounds)
 
-        self.progress.mbar.graph_ax.set_xlabel('Batches', x=0, horizontalalignment='right', verticalalignment='bottom')
-        self.progress.mbar.graph_ax.set_ylabel('Loss')
-        self.progress.mbar.graph_ax.set_title(self.title)
-        # Epochs x axis
-        # global batches_per_epoch
-        if self.nb_batches:
-            batches_per_epoch = self.nb_batches[0]# [-1]/self.n_epoch
-            def epoch2batch(epoch):    return epoch * batches_per_epoch
-            def batch2epoch(batch):    return batch / batches_per_epoch
-            secax = self.progress.mbar.graph_ax.secondary_xaxis(-0.2, functions=(batch2epoch, epoch2batch))
-            secax.set_xlabel('Epochs', x=0, horizontalalignment='right', verticalalignment='bottom');
-            self.progress.mbar.graph_out.update(self.progress.mbar.graph_ax.figure)
+        if IN_NOTEBOOK:
+            self.progress.mbar.graph_ax.set_xlabel('Batches', x=0, horizontalalignment='right', verticalalignment='bottom')
+            self.progress.mbar.graph_ax.set_ylabel('Loss')
+            self.progress.mbar.graph_ax.set_title(self.title)
+            # Epochs x axis
+            # global batches_per_epoch
+            if self.nb_batches:
+                batches_per_epoch = self.nb_batches[0]# [-1]/self.n_epoch
+                def epoch2batch(epoch):    return epoch * batches_per_epoch
+                def batch2epoch(batch):    return batch / batches_per_epoch
+                secax = self.progress.mbar.graph_ax.secondary_xaxis(-0.2, functions=(batch2epoch, epoch2batch))
+                secax.set_xlabel('Epochs', x=0, horizontalalignment='right', verticalalignment='bottom');
+                self.progress.mbar.graph_out.update(self.progress.mbar.graph_ax.figure)
 
 # %% ../nbs/source/02_utils.ipynb 17
 class ShowKLDsCallback(Callback):
@@ -278,7 +279,7 @@ class ShowKLDsCallback(Callback):
         y_bounds = None # (min((min(Tensor(rec.losses)), min(Tensor(val_losses)))),
                     # max((max(Tensor(rec.losses)), max(Tensor(val_losses)))))
         graphs = [(range(start_b,len(klds)),klds[start_b:])]
-        self.update_graph(graphs, x_bounds, y_bounds)
+        if IN_NOTEBOOK: self.update_graph(graphs, x_bounds, y_bounds)
 
     def update_graph(self, graphs, x_bounds=None, y_bounds=None, figsize=(6,4)):
         if not hasattr(self, 'graph_fig'):
@@ -353,7 +354,7 @@ class ShowLatentsCallback(ShowKLDsCallback):
         # no bounds to see fluctuation in real time
         x_bounds = None; y_bounds = None
         graphs = [(range(len(self.alphas_idx_flat)),mu[self.alphas_idx_flat])]
-        self.update_graph(graphs, x_bounds, y_bounds)
+        if IN_NOTEBOOK: self.update_graph(graphs, x_bounds, y_bounds)
 
     def update_graph(self, graphs, x_bounds=None, y_bounds=None, figsize=(6,4)):
         if not hasattr(self, 'graph_fig'):

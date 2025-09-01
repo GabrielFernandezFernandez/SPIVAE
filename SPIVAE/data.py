@@ -13,7 +13,7 @@ from scipy.special import erfcinv
 from andi_datasets.datasets_theory import datasets_theory
 AD = datasets_theory()
 
-# %% ../nbs/source/00_data.ipynb 26
+# %% ../nbs/source/00_data.ipynb 28
 def sbm(T, alpha, sigma = 1):
     '''Creates `T` scaled Brownian motion displacements'''
     msd = (sigma**2)*np.arange(T+1)**alpha
@@ -22,10 +22,10 @@ def sbm(T, alpha, sigma = 1):
     return dx
     # return np.cumsum(dx)-dx[0]  # trajectory centered at origin
 
-# %% ../nbs/source/00_data.ipynb 36
+# %% ../nbs/source/00_data.ipynb 40
 from andi_datasets.utils_trajectories import normalize_fGN
 
-# %% ../nbs/source/00_data.ipynb 37
+# %% ../nbs/source/00_data.ipynb 41
 def load_data(ds_args):
     """Loads a dataset from the given args"""
     if ds_args['model']=='fbm':
@@ -83,7 +83,7 @@ class ConditionalsTransform(Transform):
         ds = np.expand_dims(ds, axis=channel_dim)
         return (ds, ds_)
 
-# %% ../nbs/source/00_data.ipynb 50
+# %% ../nbs/source/00_data.ipynb 56
 def plot_xf(x,f, ds_args, intersect_idx, x_label='', y_label='', title='',
             x_scale='linear',y_scale='linear',):
     """Plots `f(x)` using the provided indices"""

@@ -458,6 +458,7 @@ class VAEWaveNet(nn.Module):
 
     def sample_batch(self, n,bs=100,T=200, c=None,g=None, device=None):
         """Generates new samples from zeros and conditions in batches."""
+        max_value, min_value = 1e3,-1e3
         T_in = 1  # additional initial points for predictions
         # assure sampling correctly
         if c is None:
@@ -509,6 +510,9 @@ class VAEWaveNet(nn.Module):
                         raise NotImplementedError(
                             "Current output distributions are: [logistic, normal, categorical, binary]"
                         )
+
+                    # clamp to avoid divergence
+                    sample_ = torch.clamp(sample_, min=min_value,max=max_value)
 
                     samples[..., r+self.receptive_field] = sample_
                 samples=samples[..., self.receptive_field+ T_in:] # cut zeros and T_in
