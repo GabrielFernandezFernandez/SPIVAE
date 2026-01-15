@@ -152,4 +152,4 @@ checklink/cookies.txt
 
 # data
 data/
-nbs/tutorials/models/
+*.tar
