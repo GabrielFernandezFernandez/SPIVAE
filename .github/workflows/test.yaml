@@ -1,33 +1,36 @@
 name: "CI"
 description: 'Test with nbdev'
-on:  [workflow_dispatch, pull_request, push]
+on:
+  workflow_dispatch:
+    inputs:                     # <-- now inside workflow_dispatch
+      pre:
+        description: 'Install prerelease nbdev/execnb from master?'
+        required: false
+        default: ''
+      version:
+        description: 'Version of python to set up'
+        required: false
+        default: '3.12'
+      skip_test:
+        description: 'Skip tests?'
+        required: false
+        default: ''
+      flags:
+        description: 'Space separated list of nbdev test flags to run that are normally ignored'
+        required: false
+        default: ''
+      torch_cpu:
+        description: "Install PyTorch CPU instead of PyTorch Cuda.  Has no effect if PyTorch isn't a requirement.  Enabled by defaut."
+        required: false
+        default: true
+      skip_checkout:
+        description: "Skip checkout of repo.  Useful when the repo checkout needs to be customized by the calling workflow."
+        required: false
+        default: 'false'
+  pull_request: {}               # empty mapping means “run on any PR”
+  push: {}                       # run on any push to the default branch
 env:
   HDF5_USE_FILE_LOCKING: False
-inputs:
-  pre:
-    description: 'Install prerelease nbdev/execnb from master?'
-    required: false
-    default: ''
-  version:
-    description: 'Version of python to set up'
-    required: false
-    default: '3.12'
-  skip_test:
-    description: 'Skip tests?'
-    required: false
-    default: ''
-  flags:
-    description: 'Space separated list of nbdev test flags to run that are normally ignored'
-    required: false
-    default: ''
-  torch_cpu:
-    description: "Install PyTorch CPU instead of PyTorch Cuda.  Has no effect if PyTorch isn't a requirement.  Enabled by defaut."
-    required: false
-    default: true
-  skip_checkout:
-    description: "Skip checkout of repo.  Useful when the repo checkout needs to be customized by the calling workflow."
-    required: false
-    default: 'false'
 jobs:
   test:
     runs-on: ubuntu-latest
