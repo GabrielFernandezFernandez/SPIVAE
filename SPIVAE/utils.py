@@ -442,10 +442,10 @@ def save_model(fpath, model, model_args, ds_args,):
 # %% ../nbs/source/02_utils.ipynb 24
 def load_checkpoint(fpath, model_class=VAEWaveNet, device='cuda'):
     try: # load into device
-        checkpoint = torch.load(f'{fpath}.tar', map_location=device)
+        checkpoint = torch.load(f'{fpath}.tar', weights_only=False, map_location=device)
     except: # use CPU
         device = 'cpu' 
-        checkpoint = torch.load(f'{fpath}.tar', map_location=device)
+        checkpoint = torch.load(f'{fpath}.tar', weights_only=False, map_location=device)
         
     print("Loading checkpoint: "+f"{fpath}.tar" + f'\non device: {device}')
 
