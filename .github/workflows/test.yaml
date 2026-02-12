@@ -35,6 +35,7 @@ on:
   push: {}                       # run on any push to the default branch
 env:
   HDF5_USE_FILE_LOCKING: False
+  UV_SYSTEM_PYTHON: 1
 jobs:
   test:
     runs-on: ubuntu-latest
