@@ -27,6 +27,10 @@ on:
         description: "Skip checkout of repo.  Useful when the repo checkout needs to be customized by the calling workflow."
         required: false
         default: 'false'
+			strip:
+			  description: "Check that notebooks are stripped?"
+				required: false
+				default: 'true'
   pull_request: {}               # empty mapping means “run on any PR”
   push: {}                       # run on any push to the default branch
 env:
@@ -40,8 +44,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ inputs.version }}
-          #cache: "pip"
-          #cache-dependency-path: settings.ini
       - name: Test with nbdev
         env:
           USE_PRE: ${{ inputs.pre }}
@@ -49,6 +51,7 @@ jobs:
           SKIP_TEST: ${{ inputs.skip_test }}
           FLAGS: ${{ inputs.flags }}
           TORCH_CPU: "${{ inputs.torch_cpu }}"
+					STRIP: "${{ inputs.strip }}"
         shell: bash
         run: |
           set -ux
@@ -59,13 +62,13 @@ jobs:
             pip install -U git+https://github.com/fastai/execnb.git
             pip install -U git+https://github.com/fastai/nbdev.git
           else
-            pip install -U nbdev
+            pip install -U "nbdev>=3"
           fi
           echo "Doing editable install..."
           if [ $TORCH_CPU ]; then
-            test -f setup.py && pip install -e ".[dev]" --extra-index-url https://download.pytorch.org/whl/cpu
+					  pip install -e ".[dev]" --extra-index-url https://download.pytorch.org/whl/cpu
           else
-            test -f setup.py && pip install -e ".[dev]"
+            pip install -e ".[dev]"
           fi
           echo "Check we are starting with clean git checkout"
           if [[ `git status --porcelain -uno` ]]; then
@@ -79,7 +82,7 @@ jobs:
           git status -s # display the status to see which nbs need cleaning up
           if [[ `git status --porcelain -uno` ]]; then
             git status -uno
-            echo -e "!!! Detected unstripped out notebooks\n!!!Remember to run nbdev-install-hooks"
+            echo -e "!!! Detected unstripped out notebooks\n!!!Remember to run nbdev-clean"
             echo -e "This error can also happen if you are using an older version of nbdev relative to what is in CI.  Please try to upgrade nbdev with the command `pip install -U nbdev`"
             false
           fi
