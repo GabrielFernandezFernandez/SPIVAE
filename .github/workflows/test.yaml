@@ -48,10 +48,14 @@ jobs:
         uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
-      - name: Install dependencies with uv
+      - name: Install dependencies with uv and test with nbdev
         env:
           USE_PRE: ${{ inputs.pre }}
+          OBJC_DISABLE_INITIALIZE_FORK_SAFETY: YES
+          SKIP_TEST: ${{ inputs.skip_test }}
+          FLAGS: ${{ inputs.flags }}
           TORCH_CPU: "${{ inputs.torch_cpu }}"
+          STRIP: "${{ inputs.strip }}"
         shell: bash
         run: |
           set -eux
@@ -72,18 +76,6 @@ jobs:
           else
             uv pip install -e ".[dev]"
           fi
-
-      - name: Test with nbdev
-        env:
-          USE_PRE: ${{ inputs.pre }}
-          OBJC_DISABLE_INITIALIZE_FORK_SAFETY: YES
-          SKIP_TEST: ${{ inputs.skip_test }}
-          FLAGS: ${{ inputs.flags }}
-          TORCH_CPU: "${{ inputs.torch_cpu }}"
-          STRIP: "${{ inputs.strip }}"
-        shell: bash
-        run: |
-          set -ux
           echo "Check we are starting with clean git checkout"
           if [[ `git status --porcelain -uno` ]]; then
             git diff
