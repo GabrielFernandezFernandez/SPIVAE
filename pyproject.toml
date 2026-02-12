@@ -1,11 +1,30 @@
 [build-system]
-requires = ["setuptools>=64.0"]
+requires = ["setuptools>=64"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name="SPIVAE"
-requires-python=">=3.10"
-dynamic = [ "keywords", "description", "version", "dependencies", "optional-dependencies", "readme", "license", "authors", "classifiers", "entry-points", "scripts", "urls"]
+name = "SPIVAE"
+dynamic = ["version"]
+description = "Stochastic processes insights from VAE. Code for the paper: Learning minimal representations of stochastic processes with variational autoencoders."
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "Apache-2.0"}
+authors = [{name = "Gabriel Fernández Fernández", email = "gabriel.fernandez@icfo.eu"}]
+keywords = ['time-series', 'knowledge-discovery', 'representation-learning', 'feature-learning', 'interpretability', 'variational-autoencoder', 'unsupervised-machine-learning', 'stochastic-models', 'fractional-brownian-motion', 'brownian-motion', 'autoregressive-models', 'anomalous-diffusion', 'single-trajectory-characterization', 'scaled-brownian-motion', 'nbdev', 'jupyter', 'notebook', 'python']
+classifiers = ["Natural Language :: English", "Intended Audience :: Developers", "Development Status :: 3 - Alpha", "Programming Language :: Python :: 3", "Programming Language :: Python :: 3 :: Only"]
+dependencies = ['fastai', 'andi-datasets>=2.1.13', 'numba']
 
-[tool.uv]
-cache-keys = [{ file = "pyproject.toml" }, { file = "settings.ini" }, { file = "setup.py" }]
+[project.urls]
+Repository = "https://github.com/GabrielFernandezFernandez/SPIVAE"
+Documentation = "https://GabrielFernandezFernandez.github.io/SPIVAE"
+
+[project.entry-points.nbdev]
+SPIVAE = "SPIVAE._modidx:d"
+
+[tool.setuptools.dynamic]
+version = {attr = "SPIVAE.__version__"}
+
+[tool.setuptools.packages.find]
+include = ["SPIVAE"]
+
+[tool.nbdev]
