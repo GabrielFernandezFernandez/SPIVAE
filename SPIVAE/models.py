@@ -159,7 +159,7 @@ class VAEConv1d(nn.Module):
         logvar = distributions[:, self.z_dim:]
         z      = reparameterize(mu, logvar)  # B, |z|
         x_logit= self._decode(z)             # B, channels, T
-        return x_logit, mu, logvar
+        return x_logit, mu, logvar, z
 
     # Aproximate posterior q(z|x)
     def _encode(self, x):
@@ -430,7 +430,7 @@ class VAEWaveNet(nn.Module):
             x = x.reshape(batch_size, self.init_channels,-1)  # B, in_ch, -1=28*28
         x_ = x.detach().clone()
         # x -> VAE -> c
-        c, mu, logvar = self.vae(x) if c is None and self.c_channels>0 else (c, None, None)
+        c, mu, logvar, z = self.vae(x) if c is None and self.c_channels>0 else (c, None, None, None)
         if self.c_channels==0: c=None # supress c input from fastai dataloader when no VAE
 
         if g is not None:
@@ -455,7 +455,7 @@ class VAEWaveNet(nn.Module):
         # out_conv -> (softmax or equivalent in the loss)-> prob
         output = self.out_conv(output)  # B, out, 28*28
 
-        if self.c_channels>0: return output.reshape(batch_size, self.out_channels, -1), mu, logvar, c
+        if self.c_channels>0: return output.reshape(batch_size, self.out_channels, -1), mu, logvar, c, z
         else: return output.reshape(batch_size, self.out_channels, -1)
 
     def set_use_pad(self, v: bool):
@@ -498,7 +498,7 @@ class VAEWaveNet(nn.Module):
                     pred = self(samples[...,r:r+self.receptive_field+1],
                                 c=c_b_,g=g_b)
                     if self.c_channels>0:  # VAE + WaveNet
-                        pred, mu, logvar, c_ = pred
+                        pred, mu, logvar, c_, z = pred
                     # remember model already processes input[...:-1] hence +1 to include last index (r + RF)
                     # else: p_logit, mu, logvar = pred
                     p_logit = pred
