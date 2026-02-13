@@ -458,6 +458,14 @@ class VAEWaveNet(nn.Module):
         if self.c_channels>0: return output.reshape(batch_size, self.out_channels, -1), mu, logvar, c
         else: return output.reshape(batch_size, self.out_channels, -1)
 
+    def set_use_pad(self, v: bool):
+        """
+        Recursively sets the `use_pad` attribute
+        for all instances of `DilatedCausalConv1d` in a model.
+        """
+        for m in self.modules():
+            if isinstance(m, DilatedCausalConv1d):  m.use_pad = v
+
     def sample_batch(self, n,bs=100,T=200, c=None,g=None, device=None):
         """Generates new samples from zeros and conditions in batches."""
         max_value, min_value = 1e3,-1e3
@@ -472,6 +480,8 @@ class VAEWaveNet(nn.Module):
         else:
             assert self.g_channels>0
         device = device if device is not None else next(self.parameters()).device
+        if self.use_pad: self.set_use_pad(False) # avoid padding in forward pass
+
         with torch.no_grad():
             samples_all = torch.tensor([], device=device,dtype=torch.float) # all batches
             for i in trange(n//bs):
@@ -520,6 +530,9 @@ class VAEWaveNet(nn.Module):
                 samples=samples[..., self.receptive_field+ T_in:] # cut zeros and T_in
                 # takes only sampled times from t=RF+T_in 
                 samples_all = torch.cat((samples_all,samples),dim=0)
+
+        if self.use_pad: self.set_use_pad(True)  #  Leave the model as it was
+
         return samples_all.cpu(), logits
 
     def receptive_field_size(self, show=False):
