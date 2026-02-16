@@ -28,9 +28,11 @@ To use this code as a library, you will need a system with
 `python>=3.10` and proceed with the installation. You can install SPIVAE
 by first cloning this repository in your file system:
 
-    git clone https://github.com/GabrielFernandezFernandez/SPIVAE.git
-    cd SPIVAE
-    pip install .
+``` sh
+git clone https://github.com/GabrielFernandezFernandez/SPIVAE.git
+cd SPIVAE
+pip install .
+```
 
 This will install all the necessary dependencies to make full use of the
 library. Make sure your file system has enough space to store the data
@@ -40,19 +42,21 @@ files of some GBs.
 
 If you use this library, please give us credit.
 
-    @misc{fernandez2023learning,
-      title = {Learning Minimal Representations of Stochastic Processes with Variational Autoencoders},
-      author = {{Fern{\'a}ndez-Fern{\'a}ndez}, Gabriel and Manzo, Carlo and Lewenstein, Maciej and Dauphin, Alexandre and {Mu{\~n}oz-Gil}, Gorka},
-      year = {2023},
-      month = jul,
-      number = {arXiv:2307.11608},
-      eprint = {2307.11608},
-      publisher = {{arXiv}},
-      doi = {10.48550/arXiv.2307.11608},
-      url = {http://arxiv.org/abs/2307.11608},
-      keywords  = {Soft Condensed Matter (cond-mat.soft),
-                   Machine Learning (cs.LG),
-                   Biological Physics (physics.bio-ph),
-                   {Data Analysis, Statistics and Probability (physics.data-an)},
-                   Quantitative Methods (q-bio.QM)}
-    }
+``` latex
+@misc{fernandez2023learning,
+  title = {Learning Minimal Representations of Stochastic Processes with Variational Autoencoders},
+  author = {{Fern{\'a}ndez-Fern{\'a}ndez}, Gabriel and Manzo, Carlo and Lewenstein, Maciej and Dauphin, Alexandre and {Mu{\~n}oz-Gil}, Gorka},
+  year = {2023},
+  month = jul,
+  number = {arXiv:2307.11608},
+  eprint = {2307.11608},
+  publisher = {{arXiv}},
+  doi = {10.48550/arXiv.2307.11608},
+  url = {http://arxiv.org/abs/2307.11608},
+  keywords  = {Soft Condensed Matter (cond-mat.soft),
+               Machine Learning (cs.LG),
+               Biological Physics (physics.bio-ph),
+               {Data Analysis, Statistics and Probability (physics.data-an)},
+               Quantitative Methods (q-bio.QM)}
+}
+```

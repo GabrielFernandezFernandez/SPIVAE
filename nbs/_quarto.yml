@@ -4,9 +4,31 @@ project:
 
 format:
   html:
-    theme: cosmo
+    keep-md: true
+    page-layout: full
+    respect-user-color-scheme: true
+    theme:
+      dark: darkly
+      light: lumen
     css: styles.css
+    mainfont: "Libertinus Sans"
+    monofont: "Libertinus Mono"
     toc: true
+    code-copy: true
+    code-link: true
+    code-overflow: wrap
+    code-tools:
+      source: true
+      toggle: true
+    fig-align: center
+    lightbox: true
+    smooth-scroll: true
+    anchor-sections: true
+    link-external-icon: true
+    link-external-newwindow: true
+
+language: 
+  search-text-placeholder: "Search"
 
 website:
   title: "SPIVAE"
@@ -14,19 +36,26 @@ website:
   description: "Stochastic processes insights from VAE. Code for the paper: Learning minimal representations of stochastic processes with variational autoencoders."
   repo-branch: main
   repo-url: "https://github.com/GabrielFernandezFernandez/SPIVAE"
+  favicon: spivae_icon.png
   twitter-card: true
   open-graph: true
-  repo-actions: [issue]
-  navbar:
-    background: primary
-    search: true
-    right:
-      - icon: github
-        href: "https://github.com/GabrielFernandezFernandez/SPIVAE"
+  repo-actions: [source]
+  back-to-top-navigation: true
+  page-navigation: true
+  bread-crumbs: false
+  
+ # navbar:
+ #   background: primary
+ #   search: true
+ #   right:
+ #     - icon: github
+ #       href: "https://github.com/GabrielFernandezFernandez/SPIVAE"
+
   sidebar:
     style: floating
+    search: true
     contents:
-    - index.ipynb
+    #- index.ipynb
     - section: Documentation
       contents:
       - source/00_data.ipynb
@@ -44,5 +73,10 @@ website:
         - tutorials/0_training_SBM.ipynb
         - tutorials/1_analysis_SBM.ipynb
         - tutorials/2_generation_SBM.ipynb
-    
+
+  page-footer: 
+    center: "© 2023 onwards, Gabriel Fernández Fernández"
+    border: false
+        
+# we use a single file 
 # metadata-files: [nbdev.yml, sidebar.yml]

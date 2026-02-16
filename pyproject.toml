@@ -28,3 +28,4 @@ version = {attr = "SPIVAE.__version__"}
 include = ["SPIVAE"]
 
 [tool.nbdev]
+custom_quarto_yml = true

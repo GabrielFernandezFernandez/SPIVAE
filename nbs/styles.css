@@ -14,7 +14,7 @@
   margin-left: 0.8rem;
   margin-top: 0;
   background: none;
-  border-left: 2px solid lightsalmon;
+  border-left: 0px;
   border-top-left-radius: 0;
   border-top-right-radius: 0;
 }
@@ -34,4 +34,15 @@ div.description {
   font-style: italic;
   font-size: 135%;
   opacity: 70%;
+}
+
+/* disable horizontal rules*/
+h2, .h2 {
+    border-bottom: 0px;
+}
+
+hr {
+    height: 0px;
+    border-top: 0px;
+    opacity: 0;
 }
