@@ -1,0 +1,191 @@
+# SPIVAE Module Documentation
+
+## SPIVAE.data
+
+> Data generation, preprocessing, and loading.
+
+- `def sbm(T, alpha, sigma)`
+    Creates `T` scaled Brownian motion displacements
+
+- `def load_data(ds_args)`
+    Loads a dataset from the given args
+
+- `class ConditionalsTransform`
+    Handles preprocessing and model input
+
+    - `def __init__(self, n_labels)`
+    - `def encodes(self, andi_dataset_item)`
+
+- `def plot_xf(x, f, ds_args, intersect_idx, x_label, y_label, title, x_scale, y_scale)`
+    Plots `f(x)` using the provided indices
+
+- `def plot_xf_D(x, f, ds_args, intersect_idx, f_a, f_D, f_aD, each_D, each_g, **kwargs)`
+    Plots `f(x)` using the provided indices and auxiliary functions
+
+## SPIVAE.models
+
+> Model initialization and architecture.
+
+- `def reparameterize(mu, logvar)`
+    Samples from a normal distribution using the reparameterization trick.
+    
+    Parameters
+    ----------
+    mu : torch.Tensor
+        Mean of the normal distribution. Shape (`batch_size`, `latent_dim`)
+    logvar  : torch.Tensor
+        Diagonal log variance of the normal distribution. Shape (`batch_size`, `latent_dim`)
+    
+    Returns
+    -------
+    torch.Tensor
+        Sampled latent `z` tensor as $z=\epsilon\sigma+\mu$
+
+- `class VAEConv1d`
+    1-dimensional convolutional VAE architecture
+
+    - `def __init__(self, nf, encoder, decoder, o_dim, nc_in, nc_out, z_dim, beta, avg_size, **kwargs)`
+    - `def forward(self, x, question)`
+
+- `def sample_from_mix_gaussian(y, log_scale_min)`
+    Sample from (discretized) mixture of gaussian distributions
+
+    Parameters
+    ----------
+        y : Tensor
+            Mixture of Gaussians parameters. Shape (B x C x T)
+        log_scale_min : float
+            Log scale minimum value.
+            In many other implementations this variable is never used.
+
+    Returns
+    -------
+        Tensor
+
+- `class DilatedCausalConv1d`
+    Dilated causal convolution for WaveNet
+
+    - `def __init__(self, mask_type, in_channels, out_channels, kernel_size, dilation, bias, use_pad)`
+    - `def forward(self, x)`
+
+- `class ResidualBlock`
+    Residual block with conditions and gate mechanism
+
+    - `def __init__(self, res_channels, skip_channels, kernel_size, dilation, c_channels, g_channels, bias, use_pad)`
+    - `def forward(self, x, c, g)`
+
+- `class VAEWaveNet`
+    VAE with autoregressive decoder
+
+    - `def __init__(self, in_channels, res_channels, skip_channels, c_channels, g_channels, out_channels, res_kernel_size, layer_size, stack_size, out_distribution, discrete_channels, num_mixtures, use_pad, weight_norm, **kwargs)`
+    - `def weight_init(self)`
+    - `def forward(self, x, c, g)`
+    - `def sample_batch(self, n, bs, T, c, g, device)`
+        Generates new samples from zeros and conditions in batches.
+
+    - `def receptive_field_size(self, show)`
+        Compute theoretical receptive field size of the model.
+
+
+## SPIVAE.utils
+
+> Functions for the common machine learning utilities plus diffusion related methods.
+
+- `class Loss`
+    β-VAE loss function for a reconstruction term that is the negative log-likelihood
+    of a mixture of Gaussians
+
+    - `def __init__(self, RF, c, use_pad, beta, reduction)`
+    - `def __call__(self, pred, target)`
+    - `def set_hyper(self, k, v)`
+
+- `def mix_gaussian_loss(y_hat, y, log_scale_min, reduction)`
+    Mixture of continuous Gaussian distributions loss.
+    Note that it is assumed that input is scaled to [-1, 1].
+    
+    Parameters
+    ----------
+        y_hat (Tensor):
+            Predicted output (B x C x T)
+        y (Tensor):
+            Target (B x T x 1).
+        log_scale_min (float):
+            Log scale minimum value
+        reduce (bool): 
+            If True, the losses are averaged or summed for each minibatch.
+          
+    Returns
+    -------
+        Tensor
+            Loss
+
+- `def kl_divergence(mu, logvar, reduction)`
+    Compute the divergence term of the VAE loss function.
+
+- `class GaussianMixtureMetric`
+    Metric to log the Gaussian mixture loss
+
+    - `def __init__(self, RF, c, use_pad, func, reduction)`
+    - `def accumulate(self, learn)`
+
+- `class KLDMetric`
+    Metric to log the Kullback-Leibler divergence term
+
+    - `def __init__(self, c)`
+    - `def accumulate(self, learn)`
+    - `@property def name(self)`
+
+- `class ShowLossCallback`
+    Update a graph of training and validation loss
+
+    - `def __init__(self, title)`
+    - `def before_fit(self)`
+    - `def after_train(self)`
+    - `def after_epoch(self)`
+        Plot validation loss in the pbar graph
+
+
+- `class ShowKLDsCallback`
+    Update a graph of training and validation loss
+
+    - `def __init__(self, title)`
+    - `def before_fit(self)`
+    - `def after_validate(self)`
+    - `def after_fit(self)`
+    - `def after_train(self)`
+    - `def on_iter_end(self)`
+    - `def after_epoch(self)`
+        Plot validation loss in the pbar graph
+
+    - `def update_graph(self, graphs, x_bounds, y_bounds, figsize)`
+
+- `class ShowLatentsCallback`
+    Update a graph of latent space
+
+    - `def __init__(self, c, title)`
+    - `def before_fit(self)`
+    - `def after_epoch(self)`
+        Plot validation loss in the pbar graph
+
+    - `def update_graph(self, graphs, x_bounds, y_bounds, figsize)`
+
+- `class KLDsCallback`
+    Record KLD per latent variable
+
+    - `def __init__(self, c)`
+    - `def after_batch(self)`
+
+- `class GMsCallback`
+    Record NLL gaussian mixture log-likelihood means per alpha and D during training
+
+    - `def __init__(self, RF, c, use_pad, reduction)`
+    - `def after_pred(self)`
+
+- `def sig2D(sigma)`
+    Converts standard deviation into the associated diffusion coefficient
+    $D=\sigma^2/2$
+
+- `def D2sig(D)`
+    Converts standard deviation into the associated diffusion coefficient
+    $\sigma=\sqrt{2D}$
+
