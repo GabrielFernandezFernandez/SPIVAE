@@ -19,9 +19,9 @@ from torch.distributions import Normal
 # inspired from https://github.com/EtienneT/vae/blob/master/vae.ipynb
 # little trick to input the beta parameter in the loss and make a schedule for fastai.
 class Loss():
-    """β-VAE loss function for a reconstruction term that is the negative log-likelihood
-    of a mixture of Gaussians"""
-    def __init__(self, RF, c, use_pad=False, beta=0, reduction='sum'): store_attr()
+    """β-VAE loss function for a reconstruction term that is
+    the negative log-likelihood of a mixture of Gaussians"""
+    def __init__(self, RF:int, c:int, use_pad:bool=False, beta:float=0., reduction:str='sum'): store_attr()
     def __call__(self, pred, target,):
         if   self.c > 0: y_hat, mu, logvar, c_ = pred # VAE + WaveNet
         elif self.c== 0: y_hat                 = pred # WaveNet
@@ -45,26 +45,13 @@ class Loss():
 # we can easily define discretized version of the gaussian loss, however,
 # use continuous version as same as the https://clarinet-demo.github.io/
 
-def mix_gaussian_loss(y_hat, y, log_scale_min=-12.0, reduction='sum'):
+def mix_gaussian_loss(y_hat:Tensor, # Predicted output (B x C x T)
+                      y:Tensor,     # Target (B x T x 1)
+                      log_scale_min:float=-12.0, # Log scale minimum value
+                      reduction:str='sum'
+                      )-> Tensor:   # Loss
     """Mixture of continuous Gaussian distributions loss.
-    Note that it is assumed that input is scaled to [-1, 1].
-    
-    Parameters
-    ----------
-        y_hat (Tensor):
-            Predicted output (B x C x T)
-        y (Tensor):
-            Target (B x T x 1).
-        log_scale_min (float):
-            Log scale minimum value
-        reduce (bool): 
-            If True, the losses are averaged or summed for each minibatch.
-          
-    Returns
-    -------
-        Tensor
-            Loss
-    """
+    Note that it is assumed that input is scaled to [-1, 1]."""
     ##  # BxCxHxW -> BxCxT
     if y_hat.dim() == 4:
         y_hat = y_hat.reshape(*y_hat.shape[:2], -1)
@@ -73,7 +60,6 @@ def mix_gaussian_loss(y_hat, y, log_scale_min=-12.0, reduction='sum'):
         y = y.reshape(*y.shape[:2], -1)
         # BxCxT -> BxTxC
         y = y.transpose(1, 2)
-    ##
 
     assert y_hat.dim() == 3, f"y_hat {y_hat.dim()} " + f"{y_hat.shape}"
     C = y_hat.size(1)
@@ -119,7 +105,7 @@ def mix_gaussian_loss(y_hat, y, log_scale_min=-12.0, reduction='sum'):
             return -torch.mean(log_probs) # sum in every dimension (B, T, num_mixtures) and divide by the number of elements, return an scalar
         else:
 #             return -torch.sum(log_sum_exp(log_probs))
-            return -torch.mean(torch.logsumexp(log_probs, channel_dim)) 
+            return -torch.mean(torch.logsumexp(log_probs, channel_dim))
             # logsumexp in channel/mixtures dimension and then sum everything else
     elif reduction == 'sum':
         if nr_mix == 1:
@@ -142,15 +128,13 @@ def mix_gaussian_loss(y_hat, y, log_scale_min=-12.0, reduction='sum'):
             return -torch.logsumexp(log_probs, channel_dim).unsqueeze(-1)
 
 # %% ../nbs/source/02_utils.ipynb #4c048512-6a8a-43c5-a3fc-59f152cee75e
-def kl_divergence(mu, logvar, reduction='meansum'):
-    """
-    Compute the divergence term of the VAE loss function.
-    """
+def kl_divergence(mu:Tensor, logvar:Tensor, reduction:str='meansum'):
+    """Divergence term of the VAE loss function."""
     klds = -0.5*(1. + logvar - mu.pow(2) - logvar.exp()) # batch_size, z_dim
     if reduction == 'meansum':
         # total_kld
         kld = klds.sum(1).mean(0)
-        # sum of dimension_wise_kld # size 1 
+        # sum of dimension_wise_kld # size 1
     elif reduction == 'mean':
         kld = klds.mean()
     elif reduction == 'sum':
@@ -170,7 +154,8 @@ def kl_divergence(mu, logvar, reduction='meansum'):
 # and https://github.com/fastai/fastai/blob/master/fastai/learner.py#L467
 class GaussianMixtureMetric(AvgMetric):
     """Metric to log the Gaussian mixture loss"""
-    def __init__(self, RF:int,c,use_pad:bool=False,func=mix_gaussian_loss, reduction='mean'): store_attr()
+    def __init__(self, RF:int, c:int,
+                 use_pad:bool=False, func=mix_gaussian_loss, reduction:str='mean'): store_attr()
     def accumulate(self, learn):
         bs = find_bs(learn.yb)
         if   self.c > 0: pred, mu, logvar, c_ = to_detach(learn.pred, cpu=False) # VAE + WaveNet
@@ -187,7 +172,7 @@ class GaussianMixtureMetric(AvgMetric):
 # %% ../nbs/source/02_utils.ipynb #259cec0e-7a14-445e-be9d-fd759617c6d9
 class KLDMetric(AvgMetric):
     """Metric to log the Kullback-Leibler divergence term"""
-    def __init__(self, c): store_attr()
+    def __init__(self, c:int): store_attr()
     def accumulate(self, learn):
         bs = find_bs(learn.yb)
         if   self.c > 0: pred, mu, logvar, c_ = to_detach(learn.pred, cpu=False) # VAE + WaveNet
@@ -203,7 +188,7 @@ class KLDMetric(AvgMetric):
 class ShowLossCallback(Callback):
     "Update a graph of training and validation loss"
     order,run_valid=65,False
-    def __init__(self, title=''): self.title=title
+    def __init__(self, title:str=''): self.title=title
     def before_fit(self):
         self.run = not hasattr(self.learn, 'lr_finder') and not hasattr(self, "gather_preds")
         if not(self.run): return
@@ -243,7 +228,7 @@ class ShowKLDsCallback(Callback):
     "Update a graph of training and validation loss"
     order,run_valid=65,False
     names = ['']
-    def __init__(self, title=''):    self.title=title
+    def __init__(self, title:str=''):    self.title=title
 
     def before_fit(self):
         self.run = not hasattr(self.learn, 'lr_finder') and not hasattr(self, "gather_preds")
@@ -315,7 +300,7 @@ class ShowLatentsCallback(ShowKLDsCallback):
     "Update a graph of latent space"
     order,run_valid=65,False
     names = ['']
-    def __init__(self, c, title=''): store_attr()
+    def __init__(self, c, title:str=''): store_attr()
 
     def before_fit(self):
         self.run = not hasattr(self.learn, 'lr_finder') and not hasattr(self, "gather_preds")
@@ -381,7 +366,7 @@ class ShowLatentsCallback(ShowKLDsCallback):
 class KLDsCallback(Callback):
     "Record KLD per latent variable"
     order,run_valid=65,False
-    def __init__(self,c): store_attr(); self.preds = []
+    def __init__(self,c:int): store_attr(); self.preds = []
     def after_batch(self):
         if   self.c > 0: pred, mu, logvar, c_ = to_detach(self.learn.pred, cpu=False) # VAE + WaveNet
         elif self.c==-1: pred, mu, logvar     = to_detach(self.learn.pred, cpu=False) # VAE
@@ -389,7 +374,7 @@ class KLDsCallback(Callback):
         self.preds.append(KLD) # z_dim
 
 # %% ../nbs/source/02_utils.ipynb #37587298-94ff-4345-b081-2d844230dcda
-def plot_klds(learn, start_b=0, title=''):
+def plot_klds(learn, start_b:int=0, title:str=''):
     klds = learn.model.beta*np.stack(learn.kl_ds.preds) if learn.model.beta!=0. else np.stack(learn.kl_ds.preds)
     plt.semilogy(range(start_b,len(klds)),klds[start_b:]);
     plt.xlabel('Batches');plt.ylabel(r'\(\beta\) DKL');
@@ -403,7 +388,8 @@ def plot_klds(learn, start_b=0, title=''):
 class GMsCallback(Callback):
     "Record NLL gaussian mixture log-likelihood means per alpha and D during training"
     order,run_valid=65,False
-    def __init__(self,RF,c,use_pad=False,reduction='none'): store_attr(); self.preds = [];
+    def __init__(self, RF:int, c:int, use_pad:bool=False, reduction:str='none'):
+        store_attr(); self.preds = [];
     def after_pred(self):
         if   self.c > 0: pred, mu, logvar, c_ = to_detach(self.learn.pred, cpu=False) # VAE + WaveNet
         elif self.c== 0: pred                 = to_detach(self.learn.pred, cpu=False) # WaveNet
@@ -421,9 +407,9 @@ class GMsCallback(Callback):
         alphas_idx = [np.flatnonzero(alphas_items==a) for a in u_a]
         Ds_idx = [np.flatnonzero(Ds_items==D) for D in u_D]
 
-        intersect_idx = np.array([[np.intersect1d(alphas_idx[i],Ds_idx[j]) for j,D in enumerate(u_D)] for i,a in enumerate(u_a)]
-                                 ,dtype=object
-                                )
+        intersect_idx = np.array([[np.intersect1d(alphas_idx[i],Ds_idx[j]) for j,D in enumerate(u_D)]
+                                  for i,a in enumerate(u_a)]
+                                 ,dtype=object)
 
         gaussian_mix_loss_mean_aD = np.array([
             [gaussian_mix_loss[intersect_idx[i,j]].mean()
@@ -433,20 +419,20 @@ class GMsCallback(Callback):
         self.preds.append(gaussian_mix_loss_mean_aD)
 
 # %% ../nbs/source/02_utils.ipynb #5df5fc9a-bc45-406a-8eeb-44ed37f55bef
-def save_model(fpath, model, model_args, ds_args,):
+def save_model(fpath, model, model_args:dict, ds_args:dict):
     state = dict(model_args=model_args, ds_args=ds_args,
                  network_state_dict=model.state_dict(),)
     torch.save(state, f'{fpath}.tar')
     print('Saved at '+ f'{fpath}.tar')
 
 # %% ../nbs/source/02_utils.ipynb #ceed4a9d-53b0-4f95-9948-a66424da4144
-def load_checkpoint(fpath, model_class=VAEWaveNet, device='cuda'):
+def load_checkpoint(fpath, model_class=VAEWaveNet, device:str='cuda'):
     try: # load into device
         checkpoint = torch.load(f'{fpath}.tar', weights_only=False, map_location=device)
     except: # use CPU
-        device = 'cpu' 
+        device = 'cpu'
         checkpoint = torch.load(f'{fpath}.tar', weights_only=False, map_location=device)
-        
+
     print("Loading checkpoint: "+f"{fpath}.tar" + f'\non device: {device}')
 
     network = model_class(**checkpoint['model_args']).to(device)
@@ -459,11 +445,9 @@ def load_checkpoint(fpath, model_class=VAEWaveNet, device='cuda'):
 # %% ../nbs/source/02_utils.ipynb #d8f5e2dd-6988-43eb-9c98-f74c19d6c79a
 def sig2D(sigma):
     """Converts standard deviation into the associated diffusion coefficient
-    $D=\sigma^2/2$ 
-    """
+    $D=\sigma^2/2$"""
     return sigma**2*0.5
 def D2sig(D):
     """Converts standard deviation into the associated diffusion coefficient
-    $\sigma=\sqrt{2D}$
-    """
+    $\sigma=\sqrt{2D}$"""
     return (2*D)**0.5

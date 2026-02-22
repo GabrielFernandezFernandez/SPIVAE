@@ -46,3 +46,18 @@ hr {
     border-top: 0px;
     opacity: 0;
 }
+
+/*fix half-clickable "View source" links*/
+p:has(> a[style*="float:right"]) {
+  position: relative;
+  z-index: 1;
+}
+
+/*modify repo action to have explicit type*/
+a.toc-action{
+    font-size: 0;
+}
+a.toc-action::after{
+    content: "View .ipynb";
+    font-size: .8rem;
+}

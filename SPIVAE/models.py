@@ -14,8 +14,9 @@ from tqdm.auto import tqdm, trange
 # %% ../nbs/source/01_models.ipynb #bd88bd96
 import torch.nn.init as init
 
-def init_cnn(m):
-    """Initialize weights with kaiming normal in fan_out mode and bias to 0"""
+def init_cnn(m: nn.Module  # Module to initialize
+            ):
+    """Initialize module weights with kaiming normal in fan_out mode and bias to 0"""
     f = init.kaiming_normal_
     f = partial(f, mode='fan_out', nonlinearity='relu')
 
@@ -24,41 +25,34 @@ def init_cnn(m):
         if m.bias is not None:  m.bias.data.zero_()
 
 # %% ../nbs/source/01_models.ipynb #cddeae86
-def reparameterize(mu, logvar):
-    """
-    Samples from a normal distribution using the reparameterization trick.
-    
-    Parameters
-    ----------
-    mu : torch.Tensor
-        Mean of the normal distribution. Shape (`batch_size`, `latent_dim`)
-    logvar  : torch.Tensor
-        Diagonal log variance of the normal distribution. Shape (`batch_size`, `latent_dim`)
-    
-    Returns
-    -------
-    torch.Tensor
-        Sampled latent `z` tensor as $z=\epsilon\sigma+\mu$
-    """
+def reparameterize(mu:Tensor,     # Mean of the normal distribution, shape (batch_size, latent_dim)
+                   logvar:Tensor  # Diagonal log variance of the normal distribution, shape (batch_size, latent_dim)
+                  ) -> Tensor:    # Sampled latent z, shape (batch_size, latent_dim)
+    """Sample latent tensor using the reparameterization trick:
+    $z=\epsilon\sigma+\mu$, where $\epsilon\sim\mathcal{N}(0,1)$."""
     std = logvar.mul(0.5).exp_()
     eps = std.data.new(std.size()).normal_()
     return eps.mul(std).add_(mu)
 
 # %% ../nbs/source/01_models.ipynb #d6a3eca3
-def output_size_conv(input_size, kernel_size, stride=1, padding=0, dilation=1):
+def output_size_conv(input_size:int, kernel_size:int,
+                     stride:int=1, padding:int=0, dilation:int=1)-> int:
     return int(np.floor((input_size+2*padding-dilation*(kernel_size-1)-1)/stride+1))
 
-def output_size_after_n_conv(n, input_size, kernel_size, stride=1, padding=0, dilation=1):
+def output_size_after_n_conv(n:int, input_size:int, kernel_size:int,
+                             stride:int=1, padding:int=0, dilation:int=1)-> int:
     out=[]
     for i in range(n):
         input_size = output_size_conv(input_size, kernel_size, stride, padding, dilation)
         out.append(input_size)
     return out
 
-def output_size_convt(input_size, kernel_size, stride=1, padding=0, output_padding=0, dilation=1):
+def output_size_convt(input_size:int, kernel_size:int,
+                      stride:int=1, padding:int=0, output_padding:int=0, dilation:int=1)-> int:
     return int((input_size-1)*stride-2*padding+dilation*(kernel_size-1)+output_padding+1)
 
-def output_size_after_n_convt(n, input_size, kernel_size, stride=1, padding=0, output_padding=0, dilation=1):
+def output_size_after_n_convt(n:int, input_size:int, kernel_size:int,
+                              stride:int=1, padding:int=0, output_padding:int=0, dilation:int=1)-> int:
     out=[]
     for i in range(n):
         input_size = output_size_convt(input_size, kernel_size, stride, padding, output_padding, dilation)
@@ -68,41 +62,39 @@ def output_size_after_n_convt(n, input_size, kernel_size, stride=1, padding=0, o
 # %% ../nbs/source/01_models.ipynb #03a262d2
 class View(nn.Module):
     """Use as (un)flattening layer"""
-    def __init__(self, size):
+    def __init__(self, size:tuple[int]):
         super(View, self).__init__()
         self.size = size
 
-    def forward(self, tensor):
-        return tensor.reshape(self.size)
+    def forward(self, tensor):  return tensor.reshape(self.size)
 
 # %% ../nbs/source/01_models.ipynb #7ecf2714
 class VAEConv1d(nn.Module):
     """1-dimensional convolutional VAE architecture"""
-    def __init__(self, 
-                 nf,          # number of filters
-                 encoder,     # list of Encoder's dense layers sizes
-                 decoder,     # list of Decoder's dense layers sizes
-                 o_dim:int,   # input size (T)
-                 nc_in=1,     # number of input channels
-                 nc_out=6,    # number of output channels
-                 z_dim=6,     # number of latent neurons
-                 beta=0,      # weight of the KLD loss
-                 avg_size=24, # output size of the pooling layers
+    def __init__(self,
+                 nf:list[int],   # number of filters
+                 encoder:list,   # Encoder's dense layers sizes
+                 decoder:list,   # Decoder's dense layers sizes
+                 o_dim: int,     # input size (T)
+                 nc_in: int=1,   # number of input channels
+                 nc_out:int=6,   # number of output channels
+                 z_dim: int=6,   # number of latent neurons
+                 beta:float=0.,  # weight of the KLD loss
+                 avg_size:int=24,# output size of the pooling layers
                  **kwargs
                 ):
         super().__init__()
         store_attr()
         self.nc = nc_in
-        self.input_size = o_dim;
-        input_size = o_dim
+        self.input_size = input_size = o_dim;
         activation = nn.ReLU(inplace=True)
 
-        
         # with Kernel_size=3, stride=1, padding=0
         output_size = output_size_after_n_conv(len(nf),input_size,3,1,0)
         self.output_size = output_size
-        if output_size[-1]<5: raise ValueError(f"Convolutional output_size is {output_size}, considered too low.")
-        
+        if output_size[-1]<5:
+          raise ValueError(f"Convolutional output_size is {output_size}, considered too low.")
+
         # ndn: number of dense neurons after n=4 conv2d
         ndn = nf[-1]*output_size[-1]
 
@@ -112,7 +104,7 @@ class VAEConv1d(nn.Module):
         conv = [item for pair in zip(conv_layers, conv_activations) for item in pair]
         avg_pooling = avg_size
         conv.append(AdaptiveConcatPool1d(avg_pooling))
-        avg_pooling = avg_size*2  # due to the concat of both poolings
+        avg_pooling = avg_size*2  # twice due to the concat of both poolings
         self.scale_factor = output_size[-1]/avg_pooling
         output_size.append(avg_pooling)
         ndn = nf[-1]*output_size[-1]
@@ -128,13 +120,13 @@ class VAEConv1d(nn.Module):
         if encoder[-1]==None: encoder = encoder[:-1] # clean None
 
         encoder = conv + encoder
-        
+
         self.encoder = nn.Sequential(*encoder)
 
         decoder_sizes = [z_dim] + decoder + [ndn]
-        
+
         decoder_activations = [nn.ReLU(inplace=True) for i in range(len(decoder_sizes) - 1)]
-        decoder_layers = [nn.Linear(dim_in, dim_out) for dim_in, dim_out in 
+        decoder_layers = [nn.Linear(dim_in, dim_out) for dim_in, dim_out in
                           zip(decoder_sizes[:-1], decoder_sizes[1:])]
         decoder = [item for pair in zip(decoder_layers, decoder_activations) for item in pair]
 
@@ -161,15 +153,11 @@ class VAEConv1d(nn.Module):
         x_logit= self._decode(z)             # B, channels, T
         return x_logit, mu, logvar
 
-    # Aproximate posterior q(z|x)
-    def _encode(self, x):
-        return self.encoder(x)
+    def _encode(self, x):  return self.encoder(x)  # Aproximate posterior q(z|x)
 
     def _decode(self, z, question=None):
-        if question is not None:
-            qz = torch.cat((question, z), dim=-1)
-        else:
-            qz = z
+        if question is not None:  qz = torch.cat((question, z), dim=-1)
+        else:  qz = z
         x = self.decoder(qz)
         if not hasattr(self,'Tgen') or self.Tgen is None:
             x = F.interpolate(x, scale_factor=self.scale_factor)
@@ -183,22 +171,10 @@ from torch.distributions import Normal
 
 # %% ../nbs/source/01_models.ipynb #d471b6ce
 # modified from https://github.com/r9y9/wavenet_vocoder/blob/master/wavenet_vocoder/mixture.py#L221
-def sample_from_mix_gaussian(y, log_scale_min=-12.0):
-    """
-    Sample from (discretized) mixture of gaussian distributions
-
-    Parameters
-    ----------
-        y : Tensor
-            Mixture of Gaussians parameters. Shape (B x C x T)
-        log_scale_min : float
-            Log scale minimum value.
-            In many other implementations this variable is never used.
-
-    Returns
-    -------
-        Tensor
-    """
+def sample_from_mix_gaussian(y:Tensor, # Mixture of Gaussians parameters. Shape (B x C x T)
+                             log_scale_min:float=-12.0, # Log scale minimum value.
+                            )-> Tensor:
+    """Sample from (discretized) mixture of gaussian distributions."""
     C = y.size(1)
     if C == 2:
         nr_mix = 1
@@ -246,14 +222,14 @@ def sample_from_mix_gaussian(y, log_scale_min=-12.0):
 
 # %% ../nbs/source/01_models.ipynb #b0abaab0
 # Implementation of WaveNet modified from
-# https://github.com/ryujaehun/wavenet 
-# and Pieter Abbeel course 
+# https://github.com/ryujaehun/wavenet
+# and Pieter Abbeel course
 # https://github.com/rll/deepul/blob/master/demos/lecture2_autoregressive_models_demos.ipynb
 
 class DilatedCausalConv1d(nn.Module):
     """Dilated causal convolution for WaveNet"""
-    def __init__(self,mask_type,in_channels,out_channels,
-                 kernel_size=2,dilation=1,bias=True, use_pad=True):
+    def __init__(self, mask_type:str, in_channels:int, out_channels:int,
+                 kernel_size:int=2, dilation:int=1, bias:bool=True, use_pad:bool=True):
         super().__init__()
         self.use_pad = use_pad
         self.conv = nn.Conv1d(in_channels,out_channels,
@@ -282,8 +258,8 @@ class DilatedCausalConv1d(nn.Module):
 # %% ../nbs/source/01_models.ipynb #8aaed028
 class ResidualBlock(nn.Module):
     """Residual block with conditions and gate mechanism"""
-    def __init__(self,res_channels,skip_channels,kernel_size,dilation,
-                 c_channels=0,g_channels=0,bias=True, use_pad=True):
+    def __init__(self, res_channels:int, skip_channels:int, kernel_size:int, dilation:int,
+                 c_channels:int=0, g_channels:int=0, bias:bool=True, use_pad:bool=True):
         super().__init__()
         self.dilated = DilatedCausalConv1d('B',res_channels,2 * res_channels,
                                            kernel_size=kernel_size,dilation=dilation,
@@ -315,6 +291,7 @@ class ResidualBlock(nn.Module):
         # split channels
         channel_dim = 1
         o1, o2 = output.chunk(2, dim=channel_dim) # also named filter and gate
+
         # local conditioning
         if c is not None:
             if self.conv_c is not None:
@@ -331,9 +308,9 @@ class ResidualBlock(nn.Module):
             g1, g2 = g.chunk(2, dim=channel_dim)
             o1, o2 = o1 + g1, o2 + g2
         else: assert self.conv_g is None
-        
+
         # GLU from https://arxiv.org/abs/1612.08083
-        # gate # id * sigmoid # tanh * sigmoid from 
+        # gate # id * sigmoid # tanh * sigmoid from
         gated = o1 * torch.sigmoid(o2)  # torch.tanh(o1) * torch.sigmoid(o2)
         # skip conv 1x1
         skip = self.conv_skip(gated)
@@ -349,28 +326,28 @@ class VAEWaveNet(nn.Module):
     """VAE with autoregressive decoder"""
     name = "VAEWaveNet"
     def __init__(self,
-                 in_channels=1,     # input channels
-                 res_channels=16,   # residual channels
-                 skip_channels=16,  # skip connections channels
-                 c_channels=6,      # local conditioning
-                 g_channels=0,      # global conditioning
-                 out_channels=1,    # output channels
-                 res_kernel_size=3, # kernel_size of residual blocks dilated layers
-                 layer_size=4,      # Largest dilation is 2^layer_size
-                 stack_size=1,      # number of layers stacks
-                 out_distribution="normal",
-                 discrete_channels=256,
-                 num_mixtures=1,
-                 use_pad=False,
-                 weight_norm=False,
+                 in_channels:  int=1,   # input channels
+                 res_channels: int=16,  # residual block channels
+                 skip_channels:int=16,  # skip connection channels
+                 c_channels:   int=6,   # local conditioning (time-wise)
+                 g_channels:   int=0,   # global conditioning (the same for the whole sequence)
+                 out_channels: int=1,   # output channels
+                 res_kernel_size:int=3, # kernel_size of dilated layers in residual blocks
+                 layer_size:   int=4,   # largest dilation is 2^layer_size
+                 stack_size:   int=1,   # number of layers stacks
+                 out_distribution:str="normal",
+                 discrete_channels:int=256,
+                 num_mixtures: int=1,   # 1=no mixture
+                 use_pad: bool=False,
+                 weight_norm:bool=False,
                  **kwargs):
         store_attr()
         super().__init__()
         self.init_channels = in_channels
         self.out_distribution = out_distribution.lower()
         if self.out_distribution == "normal":
-            out_channels = out_channels * num_mixtures * 3  # (pi, mu, logstd)
-            # pi is the probability of each distribution in the mixture
+            out_channels = out_channels * num_mixtures * 3  # (p_i, mu, logstd)
+            # p_i is the probability of each distribution in the mixture
         elif self.out_distribution == "logistic":
             out_channels = out_channels * num_mixtures * 3
         elif self.out_distribution == "categorical":
@@ -385,7 +362,7 @@ class VAEWaveNet(nn.Module):
             self.beta = self.vae.beta; self.z_dim = self.vae.z_dim
             self.input_size = self.vae.input_size
             self.output_size = self.vae.output_size
-        
+
         # x-> init -> causal
         self.init_conv = nn.Conv1d(in_channels, res_channels,
                                    kernel_size=1, bias=True
@@ -408,7 +385,7 @@ class VAEWaveNet(nn.Module):
         self.receptive_field = self.receptive_field_size()
 
         self.weight_init()  # custom weight init for VAE (to prevent logvar explosion)
-        
+
     def weight_init(self):
         for m in flatten_model(self):
             if has_params(m):    init_cnn(m,)  #  method='kaiming'
@@ -422,7 +399,7 @@ class VAEWaveNet(nn.Module):
         std = gain / math.sqrt(fan)
         init.trunc_normal_(self.out_conv[-1].weight.data, std=std)
 
-    def forward(self, x, c=None, g=None):
+    def forward(self, x:Tensor, c=None, g=None):
         batch_size, x_size = x.shape[0], x.shape[2:]
         # input x
         if x.dim() >= 4:
@@ -442,7 +419,7 @@ class VAEWaveNet(nn.Module):
         output = self.init_conv(x_)   # B, res, 28*28
         output = self.causal(output)  # B, res, 28*28
         # output = self.res_stack(output)         # B, res, 28*28
-        
+
         skip = torch.zeros((batch_size, self.skip_channels, *output.shape[2:]), device=x.device)
         sqrt_half = 0.5**0.5
         # -> dilated residual stack...-> skips sum
@@ -458,7 +435,7 @@ class VAEWaveNet(nn.Module):
         if self.c_channels>0: return output.reshape(batch_size, self.out_channels, -1), mu, logvar, c
         else: return output.reshape(batch_size, self.out_channels, -1)
 
-    def sample_batch(self, n,bs=100,T=200, c=None,g=None, device=None):
+    def sample_batch(self, n:int,bs:int=100,T:int=200, c=None,g=None, device=None):
         """Generates new samples from zeros and conditions in batches."""
         max_value, min_value = 1e3,-1e3
         T_in = 1  # additional initial points for predictions
@@ -493,14 +470,14 @@ class VAEWaveNet(nn.Module):
                     # else: p_logit, mu, logvar = pred
                     p_logit = pred
                     logits  = p_logit.squeeze(-1) # the next timestep
-                    
+
                     if self.out_distribution == "normal":
                         logits = logits.unsqueeze(-1)
                         sample_ = sample_from_mix_gaussian(logits)
                     elif self.out_distribution == "logistic":
                         logits = logits.unsqueeze(-1)
                         sample_ = sample_from_discretized_mix_logistic(logits)
-                    
+
                     elif self.out_distribution == "binary":
                         probs = torch.sigmoid(logits)
                         sample_ = torch.bernoulli(probs)
@@ -518,11 +495,11 @@ class VAEWaveNet(nn.Module):
 
                     samples[..., r+self.receptive_field] = sample_
                 samples=samples[..., self.receptive_field+ T_in:] # cut zeros and T_in
-                # takes only sampled times from t=RF+T_in 
+                # takes only sampled times from t=RF+T_in
                 samples_all = torch.cat((samples_all,samples),dim=0)
         return samples_all.cpu(), logits
 
-    def receptive_field_size(self, show=False):
+    def receptive_field_size(self, show:bool=False):
         """Compute theoretical receptive field size of the model."""
         # (L_in−1)×stride−2×more_than_causal_padding+dilation×(kernel_size−1)+1
         receptive_field = 1 # this accounts for oneself shift.

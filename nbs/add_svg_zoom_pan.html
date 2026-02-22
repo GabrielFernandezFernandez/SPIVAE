@@ -1,0 +1,50 @@
+<script>
+  function initSvgPanZoom(svgPanZoom) {
+      // look for the ones to be mutated
+  var observer = new MutationObserver(function() {
+    var svgs = document.querySelectorAll('.cell svg[viewBox]:not([data-svg-pan-zoom])');
+    if (svgs.length > 0) {
+      svgs.forEach(function(svg) {
+          svg.setAttribute('data-svg-pan-zoom', 'true');
+          // preserve height
+                 var vb = svg.getAttribute('viewBox').split(' ');
+          var aspectRatio = parseFloat(vb[3]) / parseFloat(vb[2]);
+          svg.style.height = (svg.getBoundingClientRect().width * aspectRatio) + 'px';
+          svgPanZoom(svg, { controlIconsEnabled: true, center: true });
+               });
+    }
+  });
+      observer.observe(document.body, { childList: true, subtree: true });
+     // check for any SVGs that already exist
+  var existingSvgs = document.querySelectorAll('.cell svg[viewBox]:not([data-svg-pan-zoom])');
+  existingSvgs.forEach(function(svg) {
+      svg.setAttribute('data-svg-pan-zoom', 'true');
+       // preserve height
+          var vb = svg.getAttribute('viewBox').split(' ');
+          var aspectRatio = parseFloat(vb[3]) / parseFloat(vb[2]);
+          svg.style.height = (svg.getBoundingClientRect().width * aspectRatio) + 'px';
+          svgPanZoom(svg, { controlIconsEnabled: true, center: true });
+         });
+}
+
+
+
+  fetch('https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js')
+  .then(function(r) { return r.text(); })
+  .then(function(code) {
+    (new Function('define', code))(undefined);
+    initSvgPanZoom(window.svgPanZoom);
+  });
+
+
+  
+//  var _define = window.define;
+//window.define = undefined;
+//var script = document.createElement('script');
+//script.src = 'https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js';
+//script.onload = function() {
+//  window.define = _define;
+//  initSvgPanZoom(window.svgPanZoom);
+//};
+//document.head.appendChild(script);
+</script>

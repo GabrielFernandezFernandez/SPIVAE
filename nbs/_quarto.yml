@@ -19,8 +19,12 @@ format:
     theme:
       dark: darkly
       light: lumen
+    mermaid:
+      theme: neutral
     css: styles.css
-    include-after-body: fix-commonmark.html
+    include-in-header:
+      - add_svg_zoom_pan.html
+      - fix-commonmark.html
     mainfont: "Libertinus Sans"
     monofont: "Libertinus Mono"
     toc: true
@@ -30,6 +34,8 @@ format:
     code-tools:
       source: true
       toggle: true
+    code-summary:  "Show/hide code"
+    output-summary: "Show/hide code output"
     fig-align: center
     lightbox: true
     smooth-scroll: true
@@ -53,19 +59,11 @@ website:
   back-to-top-navigation: true
   page-navigation: true
   bread-crumbs: false
-  
- # navbar:
- #   background: primary
- #   search: true
- #   right:
- #     - icon: github
- #       href: "https://github.com/GabrielFernandezFernandez/SPIVAE"
 
   sidebar:
     style: floating
     search: true
     contents:
-    #- index.ipynb
     - section: Documentation
       contents:
       - source/00_data.ipynb
@@ -90,3 +88,10 @@ website:
         
 # we use a single file 
 # metadata-files: [nbdev.yml, sidebar.yml]
+
+# Extension configuration
+#filters:
+#  - collapse-output
+#extensions:
+#  collapse-output:
+#    method: javascript

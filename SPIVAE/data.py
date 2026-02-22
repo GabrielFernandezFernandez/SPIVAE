@@ -16,8 +16,10 @@ from andi_datasets.datasets_theory import datasets_theory
 AD = datasets_theory()
 
 # %% ../nbs/source/00_data.ipynb #ed0bf8db-94eb-4eff-86fe-da58581b135c
-def sbm(T, alpha, sigma = 1):
-    '''Creates `T` scaled Brownian motion displacements'''
+def sbm(T: int,  # trajectory time steps
+        alpha: float,
+        sigma: float = 1. )-> np.array:
+    '''Creates `T` scaled Brownian motion displacements.'''
     msd = (sigma**2)*np.arange(T+1)**alpha
     dx = np.sqrt(msd[1:]-msd[:-1])
     dx = np.sqrt(2)*dx*erfcinv(2-2*np.random.rand(len(dx)))
@@ -28,11 +30,13 @@ def sbm(T, alpha, sigma = 1):
 from andi_datasets.utils_trajectories import normalize_fGN
 
 # %% ../nbs/source/00_data.ipynb #b348a472-b55d-460c-87e4-2216320b5551
-def load_data(ds_args):
-    """Loads a dataset from the given args"""
+def load_data(ds_args: dict) -> DataLoaders:
+    """Loads a dataset from the given args and returns train and validation `DataLoaders`.
+    Trajectories are preprocessed on load and on-the-fly via `ConditionalsTransform`."""
+
     if ds_args['model']=='fbm':
         ds = AD.create_dataset(T=ds_args["T"], N_models=ds_args["N"],
-                               exponents=ds_args["alpha"], models=[2], 
+                               exponents=ds_args["alpha"], models=[2],
                                N_save=ds_args["N_save"],
                                T_save=ds_args["T_save"],
                                save_trajectories=False, load_trajectories=True,
@@ -75,7 +79,8 @@ def load_data(ds_args):
     return tfl.dataloaders(ds_args['bs'], n_inp=n_inp, num_workers=2, pin_memory=True, drop_last=True)
 
 class ConditionalsTransform(Transform):
-    """Handles preprocessing and model input"""
+    """Extracts the positional information from the input array,
+    inserts a channel dimension for convolutions, and discards the labels."""
     def __init__(self, n_labels=1): store_attr()
     def encodes(self, andi_dataset_item):
         ds,ds_labels = andi_dataset_item[self.n_labels:], andi_dataset_item[:self.n_labels]
@@ -86,19 +91,24 @@ class ConditionalsTransform(Transform):
         return (ds, ds_)
 
 # %% ../nbs/source/00_data.ipynb #20ddfd63-51d2-467d-8acc-f84f046651a5
-def plot_xf(x,f, ds_args, intersect_idx, x_label='', y_label='', title='',
-            x_scale='linear',y_scale='linear',):
-    """Plots `f(x)` using the provided indices"""
+def plot_xf(x, f, ds_args:dict, intersect_idx,
+            x_label:str='', y_label:str='', title:str='',
+            x_scale:str='linear',y_scale:str='linear',):
+    """Plot a set of input arrays `x` transformed by `f`
+    and colored by a parameter combination."""
     for i,a in enumerate(ds_args["alpha"]):
         for j,D in enumerate(ds_args["D"]):
             plt.plot(f(x[intersect_idx[i,j]]), label=f'{a:.3g}, {D:.3g}');
-    plt.xlabel(x_label);plt.ylabel(y_label, rotation=0);
-    plt.xscale(x_scale);plt.yscale(y_scale);
-    plt.title(title);
+    plt.xlabel(x_label); plt.ylabel(y_label, rotation=0);
+    plt.xscale(x_scale); plt.yscale(y_scale); plt.title(title);
 
-def f_a_text(a,y):    plt.text(0.95,y[-1],f'{a:.3g}', transform=matplotlib.transforms.blended_transform_factory(plt.gca().transAxes, plt.gca().transData));
+def f_a_text(a,y):
+    """Format an anomalous exponent `a` value as a text annotation in (0.95,y) of axes coordinates"""
+    plt.text(0.95,y[-1],f'{a:.3g}',
+             transform=matplotlib.transforms.blended_transform_factory(plt.gca().transAxes, plt.gca().transData));
 
-def plot_xf_D(x,f, ds_args, intersect_idx, f_a=None,f_D=None,f_aD=None,each_D=True,each_g=True,  **kwargs):
+def plot_xf_D(x,f, ds_args:dict, intersect_idx,
+              f_a=None,f_D=None,f_aD=None,each_D=True,each_g=True, **kwargs):
     """Plots `f(x)` using the provided indices and auxiliary functions"""
     kwargs.update(dict(
         legend_title= r'$\alpha, D$',
@@ -111,15 +121,16 @@ def plot_xf_D(x,f, ds_args, intersect_idx, f_a=None,f_D=None,f_aD=None,each_D=Tr
             if f_a: f_a(a,p[0]._y)
             if f_aD: f_aD(a,D)
         if f_D: f_D(D)
-        if each_D: 
+        if each_D:
             if 'save' in kwargs: kwargs['save']=kwargs['save'][:kwargs['save'].rfind('_D')]+f'_D{D:.3g}'.replace('.','')
             set_plot_xf(**kwargs)
     if not each_D: set_plot_xf(**kwargs)
 
-def set_plot_xf(x_label='', y_label='', title='',
-                x_scale='linear',y_scale='linear',
-                legend_title='', save=False,
-                ncol=1, show_legend=True):
+def set_plot_xf(x_label:str='', y_label:str='', title:str='',
+                x_scale:str='linear', y_scale:str='linear',
+                legend_title:str='', save:bool=False,
+                ncol:int=1, show_legend:bool=True):
+    """Configure axis labels and formatting for trajectory plots."""
     plt.xlabel(x_label);plt.ylabel(y_label, rotation=0, ha='right');
     plt.xscale(x_scale);plt.yscale(y_scale);
     if ncol<4 and  show_legend==True: plt.legend(title=legend_title, bbox_to_anchor=(1,1), ncol=ncol);
