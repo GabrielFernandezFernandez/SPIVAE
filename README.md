@@ -46,7 +46,13 @@ What can you do with SPIVAE?
 To use this library, you will need a system with `python>=3.10` and
 proceed with the installation.
 
-You can install the latest version of SPIVAE by first cloning this
+Install SPIVAE from PyPI with:
+
+``` bash
+pip install SPIVAE
+```
+
+Or you can install the latest version of SPIVAE by first cloning this
 repository in your file system and installing it with pip:
 
 ``` bash
