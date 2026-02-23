@@ -151,7 +151,7 @@ class VAEConv1d(nn.Module):
         logvar = distributions[:, self.z_dim:]
         z      = reparameterize(mu, logvar)  # B, |z|
         x_logit= self._decode(z)             # B, channels, T
-        return x_logit, mu, logvar
+        return x_logit, mu, logvar, z
 
     def _encode(self, x):  return self.encoder(x)  # Aproximate posterior q(z|x)
 
@@ -407,7 +407,7 @@ class VAEWaveNet(nn.Module):
             x = x.reshape(batch_size, self.init_channels,-1)  # B, in_ch, -1=28*28
         x_ = x.detach().clone()
         # x -> VAE -> c
-        c, mu, logvar = self.vae(x) if c is None and self.c_channels>0 else (c, None, None)
+        c, mu, logvar, z = self.vae(x) if c is None and self.c_channels>0 else (c, None, None, None)
         if self.c_channels==0: c=None # supress c input from fastai dataloader when no VAE
 
         if g is not None:
@@ -432,8 +432,16 @@ class VAEWaveNet(nn.Module):
         # out_conv -> (softmax or equivalent in the loss)-> prob
         output = self.out_conv(output)  # B, out, 28*28
 
-        if self.c_channels>0: return output.reshape(batch_size, self.out_channels, -1), mu, logvar, c
+        if self.c_channels>0: return output.reshape(batch_size, self.out_channels, -1), mu, logvar, c, z
         else: return output.reshape(batch_size, self.out_channels, -1)
+
+    def set_use_pad(self, v: bool):
+        """
+        Recursively sets the `use_pad` attribute
+        for all instances of `DilatedCausalConv1d` in a model.
+        """
+        for m in self.modules():
+            if isinstance(m, DilatedCausalConv1d):  m.use_pad = v
 
     def sample_batch(self, n:int,bs:int=100,T:int=200, c=None,g=None, device=None):
         """Generates new samples from zeros and conditions in batches."""
@@ -449,6 +457,8 @@ class VAEWaveNet(nn.Module):
         else:
             assert self.g_channels>0
         device = device if device is not None else next(self.parameters()).device
+        if self.use_pad: self.set_use_pad(False) # avoid padding in forward pass
+
         with torch.no_grad():
             samples_all = torch.tensor([], device=device,dtype=torch.float) # all batches
             for i in trange(n//bs):
@@ -465,7 +475,7 @@ class VAEWaveNet(nn.Module):
                     pred = self(samples[...,r:r+self.receptive_field+1],
                                 c=c_b_,g=g_b)
                     if self.c_channels>0:  # VAE + WaveNet
-                        pred, mu, logvar, c_ = pred
+                        pred, mu, logvar, c_, z = pred
                     # remember model already processes input[...:-1] hence +1 to include last index (r + RF)
                     # else: p_logit, mu, logvar = pred
                     p_logit = pred
@@ -497,6 +507,9 @@ class VAEWaveNet(nn.Module):
                 samples=samples[..., self.receptive_field+ T_in:] # cut zeros and T_in
                 # takes only sampled times from t=RF+T_in
                 samples_all = torch.cat((samples_all,samples),dim=0)
+
+        if self.use_pad: self.set_use_pad(True)  #  Leave the model as it was
+
         return samples_all.cpu(), logits
 
     def receptive_field_size(self, show:bool=False):
