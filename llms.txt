@@ -1,0 +1,29 @@
+# SPIVAE
+
+> SPIVAE is a machine learning method to study stochastic processes. It tries to learn the probability distribution of input trajectories and permits us to interpret its functioning and generate new trajectories with controllable features.
+
+The approach was initially devised for the paper entitled [Learning minimal representations of stochastic processes with variational autoencoders](https://doi.org/10.48550/arXiv.2307.11608). We provide a documented library and detailed tutorials to facilitate the reproduction of our research findings.
+
+## Documentation
+
+- [Data](https://gabrielfernandezfernandez.github.io/SPIVAE/source/data.html.md): Data generation, preprocessing, and loading. 
+- [Model](https://gabrielfernandezfernandez.github.io/SPIVAE/source/models.html.md): Model initialization and architecture.
+- [Utils](https://gabrielfernandezfernandez.github.io/SPIVAE/source/utils.html.md): Functions for the common machine learning utilities plus diffusion related methods.
+
+## Tutorials
+
+### Fractional Brownian Motion
+- [Model training on FBM](https://gabrielfernandezfernandez.github.io/SPIVAE/tutorials/training_fbm.html.md): Example of training SPIVAE to extract the relevant physical parameters of fractional Brownian motion. 
+- [Analyzing FBM](https://gabrielfernandezfernandez.github.io/SPIVAE/tutorials/analysis_fbm.html.md): Inspecting the SPIVAE trained on FBM.
+- [Generation of FBM](https://gabrielfernandezfernandez.github.io/SPIVAE/tutorials/generation_fbm.html.md): Leveraging SPIVAE to create new FBM trajectories.
+
+### Scaled Brownian Motion
+- [Model training on SBM](https://gabrielfernandezfernandez.github.io/SPIVAE/tutorials/training_sbm.html.md): Example of training SPIVAE to extract the relevant physical parameters of scaled Brownian motion. 
+- [Analyzing SBM](https://gabrielfernandezfernandez.github.io/SPIVAE/tutorials/analysis_sbm.html.md): Inspecting the SPIVAE trained on SBM.
+- [Generation of SBM](https://gabrielfernandezfernandez.github.io/SPIVAE/tutorials/generation_sbm.html.md): Leveraging SPIVAE to create new SBM trajectories.
+
+## API
+
+- [API List](https://gabrielfernandezfernandez.github.io/SPIVAE/apilist.txt): A succint list of all functions and methods in SPIVAE.
+
+## Optional

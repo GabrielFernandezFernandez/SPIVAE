@@ -1,0 +1,63 @@
+.cell {
+  margin-bottom: 1rem;
+}
+
+.cell > .sourceCode {
+  margin-bottom: 0;
+}
+
+.cell-output > pre {
+  margin-bottom: 0;
+}
+
+.cell-output > pre, .cell-output > .sourceCode > pre, .cell-output-stdout > pre {
+  margin-left: 0.8rem;
+  margin-top: 0;
+  background: none;
+  border-left: 0px;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.cell-output > .sourceCode {
+  border: none;
+}
+
+.cell-output > .sourceCode {
+  background: none;
+  margin-top: 0;
+}
+
+div.description {
+  padding-left: 2px;
+  padding-top: 5px;
+  font-style: italic;
+  font-size: 135%;
+  opacity: 70%;
+}
+
+/* disable horizontal rules*/
+h2, .h2 {
+    border-bottom: 0px;
+}
+
+hr {
+    height: 0px;
+    border-top: 0px;
+    opacity: 0;
+}
+
+/*fix half-clickable "View source" links*/
+p:has(> a[style*="float:right"]) {
+  position: relative;
+  z-index: 1;
+}
+
+/*modify repo action to have explicit type*/
+a.toc-action{
+    font-size: 0;
+}
+a.toc-action::after{
+    content: "View .ipynb";
+    font-size: .8rem;
+}
