@@ -11,7 +11,7 @@ requires-python = ">=3.10"
 license = {text = "Apache-2.0"}
 authors = [{name = "Gabriel Fernández Fernández", email = "gabriel.fernandez@icfo.eu"}]
 keywords = ['time-series', 'knowledge-discovery', 'representation-learning', 'feature-learning', 'interpretability', 'variational-autoencoder', 'unsupervised-machine-learning', 'stochastic-models', 'fractional-brownian-motion', 'brownian-motion', 'autoregressive-models', 'anomalous-diffusion', 'single-trajectory-characterization', 'scaled-brownian-motion', 'nbdev', 'jupyter', 'notebook', 'python']
-classifiers = ["Natural Language :: English", "Intended Audience :: Developers", "Development Status :: 3 - Alpha", "Programming Language :: Python :: 3", "Programming Language :: Python :: 3 :: Only"]
+classifiers = ["Natural Language :: English", "Intended Audience :: Developers", "Development Status :: 4 - Beta", "Programming Language :: Python :: 3", "Programming Language :: Python :: 3 :: Only"]
 dependencies = ['fastai', 'andi-datasets>=2.1.13', 'numba']
 
 [project.optional-dependencies]
